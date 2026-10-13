@@ -236,7 +236,3 @@ The report opens in Power BI Desktop and refreshes successfully. Scheduled refre
 - [ ] Add dashboard screenshots and a business case study
 
 ---
-
-## Author
-
-**Mamidi Khushika Reddy** · [GitHub](https://github.com/mamidikhushikareddy)
