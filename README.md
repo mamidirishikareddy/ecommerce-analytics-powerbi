@@ -205,6 +205,7 @@ Follow the dataset provider's license and attribution terms if you redistribute 
 ---
 
 ## Power BI Dashboard
+Please find the dashboard here - [Dashboard](https://drive.google.com/file/d/1q3iPZ8H24GbrBwa4CVeNiAdUwlsxNSio/view?usp=drive_link)
 
 The report file is `Product_Pulse_AI.pbix`. It is **not included in this repository** (it is untracked by Git). Add it under a `powerbi/` folder or link to it here once published.
 
