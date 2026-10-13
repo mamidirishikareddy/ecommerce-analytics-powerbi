@@ -1,0 +1,204 @@
+version: "1.0"
+
+datasets:
+
+  orders:
+    source_file: olist_orders_dataset.csv
+    staging_name: stg_orders
+    columns:
+      order_id:
+        target: order_id
+        dtype: string
+      customer_id:
+        target: customer_id
+        dtype: string
+      order_status:
+        target: order_status
+        dtype: string
+      order_purchase_timestamp:
+        target: order_purchase_timestamp
+        dtype: datetime
+      order_approved_at:
+        target: order_approved_at
+        dtype: datetime
+      order_delivered_carrier_date:
+        target: order_delivered_carrier_date
+        dtype: datetime
+      order_delivered_customer_date:
+        target: order_delivered_customer_date
+        dtype: datetime
+      order_estimated_delivery_date:
+        target: order_estimated_delivery_date
+        dtype: datetime
+
+  order_items:
+    source_file: olist_order_items_dataset.csv
+    staging_name: stg_order_items
+    columns:
+      order_id:
+        target: order_id
+        dtype: string
+      order_item_id:
+        target: order_item_id
+        dtype: integer
+      product_id:
+        target: product_id
+        dtype: string
+      seller_id:
+        target: seller_id
+        dtype: string
+      shipping_limit_date:
+        target: shipping_limit_date
+        dtype: datetime
+      price:
+        target: price
+        dtype: decimal
+      freight_value:
+        target: freight_value
+        dtype: decimal
+
+  payments:
+    source_file: olist_order_payments_dataset.csv
+    staging_name: stg_payments
+    columns:
+      order_id:
+        target: order_id
+        dtype: string
+      payment_sequential:
+        target: payment_sequential
+        dtype: integer
+      payment_type:
+        target: payment_type
+        dtype: string
+      payment_installments:
+        target: payment_installments
+        dtype: integer
+      payment_value:
+        target: payment_value
+        dtype: decimal
+
+  reviews:
+    source_file: olist_order_reviews_dataset.csv
+    staging_name: stg_reviews
+    columns:
+      review_id:
+        target: review_id
+        dtype: string
+      order_id:
+        target: order_id
+        dtype: string
+      review_score:
+        target: review_score
+        dtype: integer
+      review_comment_title:
+        target: review_comment_title
+        dtype: string
+      review_comment_message:
+        target: review_comment_message
+        dtype: string
+      review_creation_date:
+        target: review_creation_date
+        dtype: datetime
+      review_answer_timestamp:
+        target: review_answer_timestamp
+        dtype: datetime
+
+  customers:
+    source_file: olist_customers_dataset.csv
+    staging_name: stg_customers
+    columns:
+      customer_id:
+        target: customer_id
+        dtype: string
+      customer_unique_id:
+        target: customer_unique_id
+        dtype: string
+      customer_zip_code_prefix:
+        target: customer_zip_code_prefix
+        dtype: integer
+      customer_city:
+        target: customer_city
+        dtype: string
+      customer_state:
+        target: customer_state
+        dtype: string
+
+  products:
+    source_file: olist_products_dataset.csv
+    staging_name: stg_products
+    columns:
+      product_id:
+        target: product_id
+        dtype: string
+      product_category_name:
+        target: product_category_name
+        dtype: string
+      product_name_lenght:
+        target: product_name_length
+        dtype: integer
+      product_description_lenght:
+        target: product_description_length
+        dtype: integer
+      product_photos_qty:
+        target: product_photos_qty
+        dtype: integer
+      product_weight_g:
+        target: product_weight_g
+        dtype: decimal
+      product_length_cm:
+        target: product_length_cm
+        dtype: decimal
+      product_height_cm:
+        target: product_height_cm
+        dtype: decimal
+      product_width_cm:
+        target: product_width_cm
+        dtype: decimal
+
+  sellers:
+    source_file: olist_sellers_dataset.csv
+    staging_name: stg_sellers
+    columns:
+      seller_id:
+        target: seller_id
+        dtype: string
+      seller_zip_code_prefix:
+        target: seller_zip_code_prefix
+        dtype: integer
+      seller_city:
+        target: seller_city
+        dtype: string
+      seller_state:
+        target: seller_state
+        dtype: string
+
+  geolocation:
+    source_file: olist_geolocation_dataset.csv
+    staging_name: stg_geolocation
+    columns:
+      geolocation_zip_code_prefix:
+        target: geolocation_zip_code_prefix
+        dtype: integer
+      geolocation_lat:
+        target: geolocation_lat
+        dtype: decimal
+      geolocation_lng:
+        target: geolocation_lng
+        dtype: decimal
+      geolocation_city:
+        target: geolocation_city
+        dtype: string
+      geolocation_state:
+        target: geolocation_state
+        dtype: string
+
+  category_translation:
+    source_file: product_category_name_translation.csv
+    staging_name: stg_category_translation
+    columns:
+      product_category_name:
+        target: product_category_name
+        dtype: string
+      product_category_name_english:
+        target: product_category_name_english
+        dtype: string

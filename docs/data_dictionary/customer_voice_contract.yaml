@@ -1,0 +1,178 @@
+analytics:
+  name: customer_voice
+  version: "1.0"
+
+  purpose: >
+    Governed analytical representation of customer review voice for
+    sentiment, complaint detection, complaint themes, and changes in
+    customer-reported issues over time.
+
+  grain: >
+    One row per review record identified by review_id and order_id.
+
+  business_key:
+    - review_id
+    - order_id
+
+  source_tables:
+    - fact_review
+    - fact_order
+    - fact_order_item
+    - dim_product
+    - dim_seller
+    - dim_customer
+
+  source_text_fields:
+    review_comment_title:
+      source: fact_review.review_comment_title
+      treatment: preserve_as_source_text
+
+    review_comment_message:
+      source: fact_review.review_comment_message
+      treatment: preserve_as_source_text
+
+  source_context_fields:
+    review_score:
+      source: fact_review.review_score
+
+    review_creation_date:
+      source: fact_review.review_creation_date
+
+    review_answer_timestamp:
+      source: fact_review.review_answer_timestamp
+
+    order_id:
+      source: fact_review.order_id
+
+    customer_id:
+      source: fact_order.customer_id
+
+  derived_fields:
+    review_text:
+      description: >
+        Normalized analytical text created from the available review
+        title and message fields without altering the preserved source
+        text.
+
+    has_review_text:
+      description: >
+        Indicates whether usable customer-written review text is
+        available after text normalization.
+
+    sentiment:
+      description: >
+        Model-derived sentiment classification from review text.
+
+    sentiment_confidence:
+      description: >
+        Confidence associated with the sentiment prediction.
+
+    complaint_flag:
+      description: >
+        Model-derived indication that the review contains complaint
+        language.
+
+    complaint_confidence:
+      description: >
+        Confidence associated with complaint detection.
+
+    complaint_theme:
+      description: >
+        Model-derived complaint theme assigned from an approved,
+        documented taxonomy.
+
+    theme_confidence:
+      description: >
+        Confidence associated with complaint-theme classification.
+
+  core_metrics:
+    review_count:
+      description: Total review records.
+
+    text_review_count:
+      description: Review records containing usable customer-written text.
+
+    text_coverage_pct:
+      formula: text_review_count / review_count * 100
+
+    average_review_score:
+      formula: average(review_score)
+
+    negative_review_rate_pct:
+      description: >
+        Percentage of text-bearing reviews classified as negative under
+        the approved sentiment definition.
+
+    complaint_volume:
+      description: >
+        Number of review records with complaint_flag = true.
+
+    complaint_rate_pct:
+      description: >
+        Complaint volume divided by review records with usable review text.
+
+    sentiment_distribution:
+      description: >
+        Distribution of text-bearing review records across the approved
+        sentiment classes.
+
+    complaint_theme_volume:
+      description: >
+        Count of complaint records by approved complaint theme.
+
+    complaint_theme_share_pct:
+      description: >
+        Share of complaint records represented by each complaint theme.
+
+  required_diagnostics:
+    - >
+      Sentiment must be evaluated alongside review score rather than
+      treating review score as a direct substitute for textual sentiment.
+
+    - >
+      Complaint volume must be interpreted alongside review volume and
+      text coverage.
+
+    - >
+      Complaint rate must not be calculated using reviews without usable
+      customer-written text as the denominator.
+
+    - >
+      Theme trends must be evaluated over time before being treated as
+      emerging customer issues.
+
+    - >
+      Product, seller, customer, and market attribution must preserve
+      the declared review grain and must not introduce fan-out.
+
+    - >
+      Model confidence must remain available for downstream evidence
+      evaluation.
+
+  exclusions:
+    - Unsupported causal claims
+    - Customer demographic inference
+    - Customer identity inference
+    - Sentiment labels based solely on review_score
+    - Silent text correction
+    - Silent review deduplication
+    - Unapproved complaint taxonomy
+    - AI-generated business metrics
+    - Forecasting
+    - Anomaly scoring
+    - Presentation-specific Power BI logic
+
+  data_quality_requirements:
+    - >
+      review_id + order_id must remain unique at the analytical review grain.
+
+    - >
+      review_score must remain within the governed 1-to-5 range.
+
+    - >
+      Missing review text must remain distinguishable from empty or
+      successfully processed text.
+
+    - >
+      Failed NLP processing must be explicitly represented and must not
+      be silently discarded.

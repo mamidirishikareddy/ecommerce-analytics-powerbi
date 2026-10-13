@@ -1,0 +1,378 @@
+complaint_evidence:
+
+  version: "1.0"
+
+  taxonomy:
+
+    delivery:
+      description: >
+        Evidence involving late delivery, delivery failure, delivery delay,
+        non-arrival, tracking or carrier problems, or delivery timing problems.
+
+      strong_evidence:
+        - nao chegou
+        - não chegou
+        - ainda nao chegou
+        - ainda não chegou
+        - nao recebi
+        - não recebi
+        - nao entregaram
+        - não entregaram
+        - entrega atrasada
+        - entrega atrasou
+        - entrega demorou
+        - atraso na entrega
+        - pedido atrasado
+        - pedido atrasou
+        - demorou para chegar
+        - demorou a chegar
+        - chegou atrasado
+        - chegou depois do prazo
+        - nao foi entregue
+        - não foi entregue
+
+      supporting_evidence:
+        - entrega
+        - entregar
+        - atraso
+        - atrasado
+        - atrasada
+        - prazo
+        - correios
+        - transportadora
+        - rastreamento
+        - rastreio
+
+    product_quality:
+      description: >
+        Evidence involving product defects, damage, malfunction, poor quality,
+        broken products, or products that do not work as expected.
+
+      strong_evidence:
+        - produto veio quebrado
+        - produto chegou quebrado
+        - produto quebrado
+        - produto danificado
+        - veio quebrado
+        - veio danificado
+        - produto com defeito
+        - veio com defeito
+        - apresentou defeito
+        - nao funciona
+        - não funciona
+        - parou de funcionar
+        - nao funcionou
+        - não funcionou
+        - baixa qualidade
+        - péssima qualidade
+        - pessima qualidade
+        - produto defeituoso
+
+      supporting_evidence:
+        - produto
+        - defeito
+        - quebrado
+        - quebrada
+        - danificado
+        - danificada
+        - qualidade
+        - funcionar
+        - funciona
+        - funcionamento
+
+    wrong_or_missing_item:
+      description: >
+        Evidence involving an incorrect, missing, incomplete, substituted,
+        or different item from what was ordered.
+
+      strong_evidence:
+        - veio errado
+        - produto errado
+        - item errado
+        - pedido errado
+        - recebi outro produto
+        - recebi outro item
+        - veio outro produto
+        - veio outro item
+        - faltou produto
+        - faltou item
+        - produto faltando
+        - item faltando
+        - pedido incompleto
+        - veio faltando
+        - recebi produto diferente
+        - recebi item diferente
+
+      supporting_evidence:
+        - errado
+        - errada
+        - diferente
+        - faltando
+        - faltou
+        - outro produto
+        - outro item
+        - incompleto
+
+    seller_service:
+      description: >
+        Evidence involving seller communication, seller behavior, seller
+        responsiveness, service quality, or seller-related problems.
+
+      strong_evidence:
+        - vendedor nao respondeu
+        - vendedor não respondeu
+        - vendedor nao responde
+        - vendedor não responde
+        - vendedor nao ajudou
+        - vendedor não ajudou
+        - vendedor nao resolveu
+        - vendedor não resolveu
+        - mau atendimento
+        - mal atendimento
+        - atendimento ruim
+        - vendedor ignorou
+        - vendedor nao atende
+        - vendedor não atende
+
+      supporting_evidence:
+        - vendedor
+        - atendimento
+        - responder
+        - resposta
+        - suporte
+        - contato
+        - comunicação
+        - comunicacao
+
+    order_or_transaction:
+      description: >
+        Evidence involving order processing, cancellation, payment,
+        transaction, refund, or other order-level operational problems.
+
+      strong_evidence:
+        - pedido cancelado
+        - cancelaram meu pedido
+        - pedido foi cancelado
+        - pagamento nao foi aprovado
+        - pagamento não foi aprovado
+        - cobraram errado
+        - cobrança errada
+        - cobranca errada
+        - nao recebi reembolso
+        - não recebi reembolso
+        - reembolso nao recebido
+        - reembolso não recebido
+        - problema no pagamento
+        - problema com pagamento
+        - problema no pedido
+
+      supporting_evidence:
+        - pedido
+        - pagamento
+        - cobrança
+        - cobranca
+        - reembolso
+        - cancelar
+        - cancelamento
+        - transação
+        - transacao
+
+    product_information:
+      description: >
+        Evidence involving incorrect, insufficient, misleading, or missing
+        product information or product description.
+
+      strong_evidence:
+        - descrição estava errada
+        - descricao estava errada
+        - informações erradas do produto
+        - informacoes erradas do produto
+        - produto diferente da descrição
+        - produto diferente da descricao
+        - descrição não corresponde
+        - descricao nao corresponde
+        - informação incorreta
+        - informacao incorreta
+        - medidas erradas
+        - tamanho diferente da descrição
+        - tamanho diferente da descricao
+
+      supporting_evidence:
+        - descrição
+        - descricao
+        - informação
+        - informacao
+        - especificação
+        - especificacao
+        - tamanho
+        - medida
+        - medidas
+        - características
+        - caracteristicas
+
+    packaging:
+      description: >
+        Evidence involving damaged, inadequate, missing, or poor packaging.
+
+      strong_evidence:
+        - embalagem danificada
+        - embalagem quebrada
+        - embalagem aberta
+        - embalagem veio aberta
+        - produto mal embalado
+        - veio mal embalado
+        - embalagem inadequada
+        - embalagem ruim
+        - embalagem amassada
+        - pacote danificado
+        - pacote aberto
+
+      supporting_evidence:
+        - embalagem
+        - pacote
+        - caixa
+        - embalado
+
+    other:
+      description: >
+        Generic or miscellaneous complaint evidence that does not fit the
+        primary operational categories.
+
+      strong_evidence:
+        - decepcionou
+        - decepcionante
+        - insatisfeito com o produto
+        - insatisfeita com o produto
+        - insatisfeito com a compra
+        - insatisfeita com a compra
+        - insatisfeito com o pedido
+        - insatisfeita com o pedido
+
+      supporting_evidence:
+        - problema
+        - insatisfeito
+        - insatisfeita
+        - insatisfação
+        - insatisfacao
+        - nao gostei
+        - não gostei
+        - péssimo
+        - pessimo
+        - péssima
+        - pessima
+        - ruim
+
+    unknown:
+      description: >
+        Evidence is insufficient, ambiguous, or does not provide enough
+        information to assign a reliable complaint theme.
+
+      strong_evidence: []
+
+      supporting_evidence: []
+
+  negation:
+
+    patterns:
+      - nao tive problema
+      - não tive problema
+      - sem problema
+      - nenhum problema
+      - nao apresentou problema
+      - não apresentou problema
+      - nao apresentou defeito
+      - não apresentou defeito
+      - sem defeito
+      - nao atrasou
+      - não atrasou
+      - chegou no prazo
+      - chegou antes do prazo
+      - produto funciona perfeitamente
+      - funciona perfeitamente
+
+  contextual_rules:
+
+    - id: CTX-001
+      name: strong_evidence_overrides_sentiment
+      description: >
+        Strong explicit problem evidence can establish a complaint even when
+        the review sentiment is neutral or positive.
+
+    - id: CTX-002
+      name: strong_evidence_overrides_high_score
+      description: >
+        Strong complaint evidence can establish a complaint even when the
+        numerical review score is high.
+
+    - id: CTX-003
+      name: negative_language_not_sufficient
+      description: >
+        Generic negative language such as "nao gostei", "ruim", or "péssimo"
+        must not independently establish a complaint.
+
+    - id: CTX-004
+      name: weak_negative_requires_context
+      description: >
+        Weak negative language requires additional contextual evidence before
+        it can contribute to complaint classification.
+
+    - id: CTX-005
+      name: negation_suppresses_evidence
+      description: >
+        Explicit negation such as "não tive problema" or "sem problema" must
+        not be interpreted as evidence of a complaint.
+
+    - id: CTX-006
+      name: ambiguous_theme
+      description: >
+        When multiple themes have comparable evidence and no theme is
+        sufficiently separated from the others, the primary theme must remain
+        unknown.
+
+    - id: CTX-007
+      name: praise_without_problem
+      description: >
+        Praise, recommendation, gratitude, or neutral product description
+        without explicit problem evidence must not be classified as a complaint.
+
+  confidence_method:
+
+    type: deterministic_evidence_score
+
+    description: >
+      Confidence is an auditable deterministic evidence score derived from
+      registered lexical evidence and contextual rules. It is not a calibrated
+      probability and must not be interpreted as model probability.
+
+    evidence_weights:
+      explicit_problem: 1.00
+      explicit_dissatisfaction: 0.80
+      problem_question: 0.65
+      weak_negative_language: 0.30
+
+    thresholds:
+      complaint:
+        minimum: 0.70
+
+      unknown:
+        minimum: 0.40
+        maximum_exclusive: 0.70
+
+      non_complaint:
+        maximum_exclusive: 0.40
+
+  theme_selection:
+
+    minimum_theme_score: 0.60
+    ambiguity_margin: 0.10
+
+  output_fields:
+
+    - review_id
+    - order_id
+    - customer_id
+    - complaint_flag
+    - complaint_confidence
+    - complaint_theme
+    - complaint_theme_confidence
+    - complaint_detection_method

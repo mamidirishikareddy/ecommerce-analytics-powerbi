@@ -1,0 +1,141 @@
+version: "1.0"
+
+mart:
+  name: mart_product_performance_daily
+
+  purpose: >
+    Daily product performance analytical mart supporting product,
+    category, and revenue-performance analysis without introducing
+    presentation-specific KPI logic.
+
+  grain: one row per calendar date and product
+
+  business_key:
+    - date
+    - product_id
+
+  source_tables:
+    - fact_order_item
+    - fact_order
+    - dim_product
+    - dim_category
+    - dim_customer
+    - dim_date
+
+  join_rules:
+    - >
+      fact_order_item.order_id joins fact_order.order_id
+    - >
+      fact_order_item.product_id joins dim_product.product_id
+    - >
+      fact_order.customer_id joins dim_customer.customer_id
+    - >
+      fact_order_item order date derives from
+      fact_order.order_purchase_timestamp
+    - >
+      derived order date joins dim_date.date
+    - >
+      dim_product.product_category_name joins
+      dim_category.product_category_name using a left join
+
+  transformations:
+    - >
+      order_date is derived from
+      fact_order.order_purchase_timestamp
+    - >
+      revenue is SUM(fact_order_item.price)
+    - >
+      freight_value is SUM(fact_order_item.freight_value)
+    - >
+      item_line_count is COUNT of fact_order_item rows
+    - >
+      order_count is DISTINCT COUNT of order_id
+    - >
+      customer_count is DISTINCT COUNT of dim_customer.customer_unique_id
+    - >
+      avg_item_price is AVG(fact_order_item.price)
+    - >
+      gross_merchandise_value is defined as SUM(fact_order_item.price)
+    - >
+      no explicit units-sold metric is created because the source
+      dataset contains no quantity field
+
+  columns:
+
+    date:
+      dtype: date
+      nullable: false
+      role: business_key
+      source: derived from fact_order.order_purchase_timestamp
+
+    product_id:
+      dtype: string
+      nullable: false
+      role: business_key
+      source: fact_order_item.product_id
+
+    product_category_name:
+      dtype: string
+      nullable: true
+      role: dimension_attribute
+      source: dim_product.product_category_name
+
+    product_category_name_english:
+      dtype: string
+      nullable: true
+      role: dimension_attribute
+      source: dim_category.product_category_name_english
+
+    item_line_count:
+      dtype: integer
+      nullable: false
+      role: analytical_measure
+
+    order_count:
+      dtype: integer
+      nullable: false
+      role: analytical_measure
+
+    customer_count:
+      dtype: integer
+      nullable: false
+      role: analytical_measure
+
+    revenue:
+      dtype: decimal
+      nullable: false
+      role: analytical_measure
+
+    freight_value:
+      dtype: decimal
+      nullable: false
+      role: analytical_measure
+
+    gross_merchandise_value:
+      dtype: decimal
+      nullable: false
+      role: analytical_measure
+
+    avg_item_price:
+      dtype: decimal
+      nullable: false
+      role: analytical_measure
+
+  exclusions:
+    - >
+      Do not join fact_payment into this mart because payment is
+      one-to-many at order level and can introduce revenue fan-out.
+    - >
+      Do not join fact_review into this mart because review is
+      separately grained and can introduce revenue fan-out.
+    - >
+      Do not calculate growth rates, contribution percentages,
+      rankings, or rolling metrics in the mart.
+    - >
+      Do not perform customer segmentation in the mart.
+    - >
+      Do not perform seller-level aggregation in the mart.
+    - >
+      Do not impute missing product categories.
+    - >
+      Do not invent category translations.

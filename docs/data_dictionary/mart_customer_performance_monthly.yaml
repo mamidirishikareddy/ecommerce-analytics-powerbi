@@ -1,0 +1,168 @@
+version: "1.0"
+
+mart:
+  name: mart_customer_performance_monthly
+
+  purpose: >
+    Monthly analytical view of customer purchasing performance for
+    acquisition, repeat behavior, customer value, and revenue contribution analysis.
+
+  grain: >
+    One row per calendar month and customer_unique_id.
+
+  business_key:
+    - month
+    - customer_unique_id
+
+  source_tables:
+    - fact_order
+    - fact_order_item
+    - dim_customer
+    - dim_date
+
+  join_rules:
+    - >
+      fact_order.customer_id joins dim_customer.customer_id.
+    - >
+      fact_order.order_id joins fact_order_item.order_id.
+    - >
+      order month is derived from fact_order.order_purchase_timestamp.
+    - >
+      order month joins dim_date.date at calendar-month level.
+
+  transformations:
+    - >
+      month is derived from fact_order.order_purchase_timestamp
+      at calendar-month grain.
+    - >
+      order_count is the distinct count of fact_order.order_id
+      for each customer_unique_id and month.
+    - >
+      item_line_count is the count of fact_order_item rows associated
+      with the customer's orders in the month.
+    - >
+      revenue is the sum of fact_order_item.price associated with
+      the customer's orders in the month.
+    - >
+      freight_value is the sum of fact_order_item.freight_value
+      associated with the customer's orders in the month.
+    - >
+      avg_order_value is revenue divided by distinct order_count
+      at the customer-month grain.
+    - >
+      first_purchase_month is the earliest observed purchase month
+      for each customer_unique_id across the complete order history.
+    - >
+      customer_status is NEW when month equals first_purchase_month;
+      otherwise REPEAT.
+
+  columns:
+
+    month:
+      type: date
+      nullable: false
+      source: derived
+      description: >
+        Calendar month represented by the customer's activity.
+
+    customer_unique_id:
+      type: string
+      nullable: false
+      source: dim_customer.customer_unique_id
+      description: >
+        Persistent customer identity across customer-order identifiers.
+
+    order_count:
+      type: integer
+      nullable: false
+      source: fact_order.order_id
+      description: >
+        Distinct orders placed by the customer in the month.
+
+    item_line_count:
+      type: integer
+      nullable: false
+      source: fact_order_item.order_id
+      description: >
+        Number of order-item lines associated with the customer's
+        orders in the month.
+
+    revenue:
+      type: decimal
+      nullable: false
+      source: fact_order_item.price
+      description: >
+        Sum of item prices for the customer's orders in the month.
+
+    freight_value:
+      type: decimal
+      nullable: false
+      source: fact_order_item.freight_value
+      description: >
+        Sum of freight values for the customer's orders in the month.
+
+    avg_order_value:
+      type: decimal
+      nullable: false
+      source: derived
+      description: >
+        Customer monthly revenue divided by distinct monthly orders.
+
+    first_purchase_month:
+      type: date
+      nullable: false
+      source: derived
+      description: >
+        Customer's first observed purchase month in the dataset.
+
+    customer_status:
+      type: string
+      nullable: false
+      source: derived
+      description: >
+        NEW if this is the customer's first observed purchase month;
+        otherwise REPEAT.
+
+  exclusions:
+    - >
+      Do not use payment data in this mart because payment rows can
+      create one-to-many fan-out against orders.
+    - >
+      Do not use review data in this mart because review rows can
+      create one-to-many fan-out against orders.
+    - >
+      Do not calculate retention percentage in the mart.
+    - >
+      Do not calculate cohort retention curves in the mart.
+    - >
+      Do not calculate customer segments in the mart.
+    - >
+      Do not calculate rankings in the mart.
+    - >
+      Do not impute missing customer identities.
+    - >
+      Do not silently deduplicate customer records.
+    - >
+      Do not introduce presentation-specific KPI logic.
+
+  quality_expectations:
+    - >
+      Each month/customer_unique_id combination must occur at most once.
+    - >
+      Revenue must reconcile to the corresponding order-item revenue
+      represented by the mart population.
+    - >
+      Freight must reconcile to the corresponding order-item freight
+      represented by the mart population.
+    - >
+      order_count must be positive for every mart row.
+    - >
+      item_line_count must be positive for every mart row.
+    - >
+      revenue must be non-negative.
+    - >
+      freight_value must be non-negative.
+    - >
+      avg_order_value must equal revenue divided by order_count.
+    - >
+      customer_status must contain only NEW or REPEAT.

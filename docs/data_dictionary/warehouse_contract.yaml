@@ -1,0 +1,131 @@
+version: "1.0"
+
+warehouse_contract:
+
+  purpose:
+    - Preserve governed business grain.
+    - Build reusable fact and dimension structures.
+    - Preserve source identifiers as business keys.
+    - Separate descriptive entities from transactional events.
+    - Support downstream analytical marts and semantic models.
+    - Do not calculate presentation-specific KPIs in warehouse tables.
+
+  facts:
+
+    fact_order:
+      grain: one row per order
+      source_staging:
+        - stg_orders
+      business_key:
+        - order_id
+
+    fact_order_item:
+      grain: one row per order item line
+      source_staging:
+        - stg_order_items
+      business_key:
+        - order_id
+        - order_item_id
+
+    fact_payment:
+      grain: one row per payment sequence within an order
+      source_staging:
+        - stg_payments
+      business_key:
+        - order_id
+        - payment_sequential
+
+    fact_review:
+      grain: one row per review record associated with an order
+      source_staging:
+        - stg_reviews
+      business_key:
+        - review_id
+        - order_id
+
+  dimensions:
+    dim_date:
+      grain: one row per calendar date
+      source_staging: []
+      business_key:
+        - date
+
+    dim_customer:
+      grain: one row per customer-order identifier
+      source_staging:
+        - stg_customers
+      business_key:
+        - customer_id
+
+    dim_product:
+      grain: one row per product
+      source_staging:
+        - stg_products
+      business_key:
+        - product_id
+
+    dim_seller:
+      grain: one row per seller
+      source_staging:
+        - stg_sellers
+      business_key:
+        - seller_id
+
+    dim_category:
+      grain: one row per translated product category
+      source_staging:
+        - stg_category_translation
+      business_key:
+        - product_category_name
+
+    dim_geography:
+      grain: one row per governed geography reference record
+      source_staging:
+        - stg_geolocation
+      business_key: []
+
+  retained_relationships:
+
+    order_customer:
+      from: fact_order.customer_id
+      to: dim_customer.customer_id
+
+    order_item_order:
+      from:
+        - fact_order_item.order_id
+      to:
+        - fact_order.order_id
+
+    order_item_product:
+      from:
+        - fact_order_item.product_id
+      to:
+        - dim_product.product_id
+
+    order_item_seller:
+      from:
+        - fact_order_item.seller_id
+      to:
+        - dim_seller.seller_id
+
+    payment_order:
+      from:
+        - fact_payment.order_id
+      to:
+        - fact_order.order_id
+
+    review_order:
+      from:
+        - fact_review.order_id
+      to:
+        - fact_order.order_id
+
+  design_constraints:
+    - Do not introduce surrogate keys until their warehouse role is explicitly defined.
+    - Do not deduplicate source records without a governed business rule.
+    - Do not treat customer_unique_id as a unique customer_id.
+    - Do not treat order_item_id as item quantity.
+    - Do not invent product-category translations.
+    - Do not collapse geolocation observations into a single row without a governed canonicalization rule.
+    - Do not calculate presentation-specific measures in warehouse tables.
+    - Preserve source anomalies for governed investigation rather than silently correcting them.

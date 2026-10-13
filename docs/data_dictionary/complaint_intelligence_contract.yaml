@@ -1,0 +1,425 @@
+analytics:
+  name: complaint_intelligence
+  version: "1.0"
+
+  purpose: >
+    Governed identification, classification, and analysis of customer
+    complaints from review text. Complaint detection is independent of
+    sentiment classification and must not treat negative sentiment as
+    equivalent to a complaint.
+
+  grain:
+    description: >
+      One row per review record identified by review_id + order_id.
+
+  business_key:
+    - review_id
+    - order_id
+
+  source_table:
+    name: customer_voice
+    path: data/processed/nlp/customer_voice.parquet
+
+  detection_population:
+    description: >
+      Complaint detection applies only to reviews with usable normalized
+      review text. Textless reviews remain outside the complaint-analysis
+      population and must not be classified as complaints or non-complaints.
+
+    total_reviews: 99224
+    text_bearing_reviews: 42687
+    textless_reviews: 56537
+
+  source_fields:
+    review_id:
+      source: customer_voice.review_id
+      role: business_key
+
+    order_id:
+      source: customer_voice.order_id
+      role: business_key
+
+    customer_id:
+      source: customer_voice.customer_id
+      role: attribution
+
+    review_score:
+      source: customer_voice.review_score
+      role: context
+
+    review_text:
+      source: customer_voice.review_text
+      role: complaint_detection_input
+
+    has_review_text:
+      source: customer_voice.has_review_text
+      role: population_gate
+
+    sentiment:
+      source: customer_voice.sentiment
+      role: contextual_evidence
+
+    sentiment_confidence:
+      source: customer_voice.sentiment_confidence
+      role: contextual_evidence
+
+    review_creation_date:
+      source: customer_voice.review_creation_date
+      role: temporal_analysis
+
+  derived_fields:
+
+    complaint_flag:
+      type: boolean_or_null
+      description: >
+        Indicates whether the review text contains evidence of a
+        customer complaint. NULL for textless or unprocessable reviews.
+
+    complaint_confidence:
+      type: decimal_0_to_1_or_null
+      description: >
+        Confidence associated with the complaint classification.
+        This is not a business probability and must not be interpreted
+        as a probability of customer churn, revenue loss, or business impact.
+
+    complaint_theme:
+      type: controlled_category_or_null
+      description: >
+        Primary complaint theme assigned from the approved taxonomy.
+        NULL when no complaint is detected or the evidence is insufficient.
+
+    complaint_theme_confidence:
+      type: decimal_0_to_1_or_null
+      description: >
+        Confidence associated with the assigned complaint theme.
+
+    complaint_detection_method:
+      type: controlled_value
+      allowed_values:
+        - rule_based
+        - model_based
+        - hybrid
+        - manual_review
+        - unclassified
+
+      description: >
+        Identifies how the complaint classification was produced.
+
+  complaint_definition:
+    definition: >
+      A complaint is a review-text expression indicating dissatisfaction,
+      failure, defect, unmet expectation, service problem, delivery problem,
+      transaction problem, or another explicitly stated customer problem
+      requiring attention.
+
+    non_definition: >
+      A negative sentiment classification alone is insufficient evidence
+      to classify a review as a complaint.
+
+    examples_of_evidence:
+      - explicit statement that a product did not arrive
+      - explicit statement describing a defective or damaged product
+      - explicit statement describing an incorrect product
+      - explicit statement describing a delivery problem
+      - explicit statement describing seller or service failure
+      - explicit statement describing a transaction or payment problem
+      - explicit statement describing a missing or incomplete item
+      - explicit statement describing a problem with product quality
+
+  taxonomy:
+    version: "1.0"
+
+    categories:
+
+      delivery:
+        description: >
+          Problems involving delivery, shipping, delays, missed delivery,
+          delivery handling, or failure to receive the order.
+
+      product_quality:
+        description: >
+          Problems involving product quality, performance, durability,
+          functionality, defects, damage, or failure during use.
+
+      wrong_or_missing_item:
+        description: >
+          Problems involving an incorrect, incomplete, missing, or different
+          item from what the customer expected or ordered.
+
+      seller_service:
+        description: >
+          Problems involving seller responsiveness, seller behavior,
+          seller communication, fulfillment behavior, or service quality.
+
+      order_or_transaction:
+        description: >
+          Problems involving ordering, purchasing, payment, transaction,
+          cancellation, or other transaction-process issues.
+
+      product_information:
+        description: >
+          Problems involving inaccurate, incomplete, misleading, or
+          inconsistent product information or description.
+
+      packaging:
+        description: >
+          Problems involving packaging, package condition, packaging damage,
+          or inadequate protection of the product.
+
+      other:
+        description: >
+          Complaint evidence exists but does not fit the approved categories.
+
+      unknown:
+        description: >
+          Complaint evidence may exist, but available text is insufficient
+          to assign a reliable theme.
+
+  classification_rules:
+
+    rule_1:
+      description: >
+        Textless reviews must not receive complaint_flag=True or False.
+        They remain NULL for complaint classification.
+
+    rule_2:
+      description: >
+        Negative sentiment must not automatically produce complaint_flag=True.
+
+    rule_3:
+      description: >
+        Positive sentiment must not automatically produce complaint_flag=False
+        when explicit complaint evidence exists.
+
+    rule_4:
+      description: >
+        Neutral sentiment must not automatically produce complaint_flag=False.
+
+    rule_5:
+      description: >
+        Complaint detection must be based on review text evidence.
+
+    rule_6:
+      description: >
+        When complaint evidence is insufficient for reliable classification,
+        the system must preserve an explicit unknown or unclassified state.
+
+    rule_7:
+      description: >
+        Complaint theme must not be assigned solely from review_score or
+        sentiment.
+
+    rule_8:
+      description: >
+        A review may contain dissatisfaction without providing enough
+        evidence to determine a specific complaint theme.
+
+    rule_9:
+      description: >
+        Multiple complaint themes may exist in one review. The governed
+        primary dataset records one primary theme; multi-theme attribution
+        requires a separate bridge if implemented.
+
+    rule_10:
+      description: >
+        Complaint metrics must preserve the review grain and must not
+        duplicate reviews through joins to order items, products, or sellers.
+
+  metric_definitions:
+
+    review_count:
+      definition: >
+        Count of all review records in the selected population.
+
+    text_review_count:
+      definition: >
+        Count of reviews with usable normalized review text.
+
+    complaint_volume:
+      definition: >
+        Count of text-bearing reviews classified as complaints.
+
+    complaint_rate_pct:
+      definition: >
+        Complaint volume divided by text-bearing review count multiplied by 100.
+
+      formula: >
+        complaint_volume / text_review_count * 100
+
+    negative_review_rate_pct:
+      definition: >
+        Percentage of text-bearing reviews classified as negative by the
+        sentiment model. This metric is independent of complaint rate.
+
+    complaint_theme_volume:
+      definition: >
+        Count of complaint reviews assigned to each approved primary theme.
+
+    complaint_theme_share_pct:
+      definition: >
+        Complaint reviews assigned to a theme divided by total complaint
+        volume multiplied by 100.
+
+    complaint_rate_change:
+      definition: >
+        Change in complaint rate between comparable analytical periods.
+
+    complaint_volume_growth_pct:
+      definition: >
+        Percentage change in complaint volume between comparable analytical
+        periods.
+
+  required_diagnostics:
+
+    sentiment_comparison:
+      description: >
+        Complaint metrics must be analyzed alongside sentiment metrics.
+        Sentiment is contextual evidence and not the complaint label.
+
+    review_score_comparison:
+      description: >
+        Complaint metrics must be analyzed alongside review scores.
+
+    text_coverage:
+      description: >
+        Complaint rates must expose text coverage because only text-bearing
+        reviews are eligible for complaint detection.
+
+    volume_context:
+      description: >
+        Complaint volume changes must be interpreted alongside review volume,
+        order volume, and text-bearing review volume.
+
+    theme_trends:
+      description: >
+        A theme should not be described as emerging solely because it appears
+        in one period. Historical volume and comparable-period behavior must
+        be examined.
+
+    confidence:
+      description: >
+        Complaint and theme confidence must remain available for downstream
+        investigation and thresholding.
+
+  attribution_rules:
+
+    review:
+      allowed: true
+      grain: review_id + order_id
+
+    customer:
+      allowed: true
+      source: customer_id
+
+    order:
+      allowed: true
+      source: order_id
+
+    product:
+      allowed: false
+      reason: >
+        Directly joining review records to order items can fan out one review
+        into multiple products. Product attribution requires a separate
+        governed review-item bridge or explicit attribution methodology.
+
+    seller:
+      allowed: false
+      reason: >
+        Directly joining review records to order items can fan out one review
+        into multiple sellers. Seller attribution requires a separate
+        governed review-item bridge or explicit attribution methodology.
+
+    market:
+      allowed: false
+      reason: >
+        Market attribution requires an explicit review-to-order-to-customer
+        relationship and must be implemented without changing review grain.
+
+  temporal_rules:
+
+    theme_emergence:
+      description: >
+        A complaint theme may be considered newly emerging only after
+        comparison with historical periods and application of an explicit
+        minimum-volume rule.
+
+    period_comparison:
+      description: >
+        Complaint volume and rate comparisons must use comparable periods.
+
+  confidence_rules:
+
+    complaint_confidence:
+      minimum_value: 0
+      maximum_value: 1
+      required_for_classified_reviews: true
+
+    complaint_theme_confidence:
+      minimum_value: 0
+      maximum_value: 1
+      required_when_theme_assigned: true
+
+  validation_requirements:
+
+    - review_id + order_id must remain unique
+    - textless reviews must not receive complaint classification
+    - text-bearing reviews must have an explicit classification state
+    - complaint_confidence must be between 0 and 1 when populated
+    - complaint_theme_confidence must be between 0 and 1 when populated
+    - complaint_theme must belong to the approved taxonomy
+    - complaint_rate denominator must be text-bearing reviews
+    - complaint volume must not exceed text-bearing review count
+    - complaint theme volume must not exceed complaint volume
+    - no review duplication through downstream joins
+    - detection method must be explicitly recorded
+
+  governance:
+
+    prohibited:
+      - negative_sentiment_equals_complaint
+      - review_score_equals_complaint
+      - silent_text_imputation
+      - silent_review_deduplication
+      - demographic_inference
+      - customer_identity_inference
+      - unsupported_causal_claims
+      - fabricated_complaint_labels
+      - fabricated_confidence
+      - product_or_seller_attribution_without_governed_bridge
+
+    uncertainty:
+      description: >
+        The system must preserve uncertainty rather than forcing ambiguous
+        customer text into a complaint or theme category.
+
+    human_review:
+      description: >
+        Low-confidence or ambiguous classifications may be routed for manual
+        review. Manual review labels must remain distinguishable from
+        automated classifications.
+
+  lineage:
+
+    source:
+      - customer_voice.review_id
+      - customer_voice.order_id
+      - customer_voice.customer_id
+      - customer_voice.review_text
+      - customer_voice.has_review_text
+      - customer_voice.sentiment
+      - customer_voice.sentiment_confidence
+      - customer_voice.review_score
+      - customer_voice.review_creation_date
+
+    transformation:
+      - complaint_detection
+      - complaint_theme_classification
+
+    downstream:
+      - complaint_analytics
+      - customer_voice_mart
+      - product_investigation
+      - seller_investigation
+      - market_investigation
+      - ai_evidence_layer
+      - power_bi

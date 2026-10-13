@@ -1,0 +1,193 @@
+mart:
+  name: mart_product_market_performance_monthly
+  version: "1.0"
+
+  purpose: >
+    Monthly analytical view of product performance within customer
+    ZIP-prefix markets for product-market behavior, revenue contribution,
+    and cross-market performance analysis.
+
+  grain: >
+    One row per calendar month, product, and customer ZIP-prefix market.
+
+  business_key:
+    - month
+    - product_id
+    - customer_zip_code_prefix
+
+  source_tables:
+    - fact_order
+    - fact_order_item
+    - dim_customer
+    - dim_product
+    - dim_category
+    - dim_date
+
+  join_rules:
+    - >
+      fact_order.customer_id joins dim_customer.customer_id
+    - >
+      fact_order.order_id joins fact_order_item.order_id
+    - >
+      fact_order_item.product_id joins dim_product.product_id
+    - >
+      dim_product.product_category_name joins dim_category.product_category_name
+      using a left join
+    - >
+      order month is derived from fact_order.order_purchase_timestamp
+      and aligned to dim_date.date at calendar-month level
+
+  transformations:
+    - >
+      Derive month from fact_order.order_purchase_timestamp at
+      calendar-month grain.
+    - >
+      Join fact_order.customer_id to dim_customer.customer_id.
+    - >
+      Join fact_order.order_id to fact_order_item.order_id.
+    - >
+      Join fact_order_item.product_id to dim_product.product_id.
+    - >
+      Join dim_product.product_category_name to dim_category.product_category_name
+      using a left join so products without a category translation remain represented.
+    - >
+      Group records by month, product_id, customer_zip_code_prefix,
+      product_category_name, and product_category_name_english.
+    - >
+      Calculate order_count as distinct order_id.
+    - >
+      Calculate item_line_count as the count of order-item rows.
+    - >
+      Calculate customer_count as distinct customer_unique_id.
+    - >
+      Calculate revenue as the sum of fact_order_item.price.
+    - >
+      Calculate freight_value as the sum of fact_order_item.freight_value.
+    - >
+      Calculate avg_order_value as revenue divided by order_count.
+    - >
+      Calculate revenue_per_customer as revenue divided by customer_count.
+    - >
+      Calculate product-month total revenue across all customer
+      ZIP-prefix markets.
+    - >
+      Calculate market_contribution_to_product_revenue_pct as the
+      market revenue divided by total revenue for the same product
+      and month, multiplied by 100.
+
+  exclusions:
+    - Product growth percentages
+    - Market growth percentages
+    - Product-market growth percentages
+    - Product rankings
+    - Market rankings
+    - National product share
+    - Customer segmentation
+    - Retention metrics
+    - Forecast metrics
+    - Anomaly scores
+    - AI-generated metrics
+    - City or state inference
+    - Geolocation reference joins
+    - Imputation
+    - Silent data correction
+
+  columns:
+    month:
+      type: datetime
+      nullable: false
+      source: derived
+      description: >
+        Calendar month associated with the order purchase date.
+
+    product_id:
+      type: string
+      nullable: false
+      source: fact_order_item.product_id
+      description: >
+        Product identifier associated with the order-item record.
+
+    customer_zip_code_prefix:
+      type: integer
+      nullable: false
+      source: dim_customer.customer_zip_code_prefix
+      description: >
+        Customer ZIP-prefix market identifier.
+
+    product_category_name:
+      type: string
+      nullable: true
+      source: dim_product.product_category_name
+      description: >
+        Source product category name. Null values are preserved
+        from the governed warehouse.
+
+    product_category_name_english:
+      type: string
+      nullable: true
+      source: dim_category.product_category_name_english
+      description: >
+        Translated English product category name where available.
+        Null values are preserved when no translation is available.
+
+    order_count:
+      type: integer
+      nullable: false
+      source: derived
+      description: >
+        Distinct number of orders for the product and market
+        within the calendar month.
+
+    item_line_count:
+      type: integer
+      nullable: false
+      source: derived
+      description: >
+        Number of order-item lines represented by the product-market
+        combination within the calendar month.
+
+    customer_count:
+      type: integer
+      nullable: false
+      source: derived
+      description: >
+        Distinct customer_unique_id values associated with the
+        product-market combination within the calendar month.
+
+    revenue:
+      type: decimal
+      nullable: false
+      source: fact_order_item.price
+      description: >
+        Sum of order-item prices for the product-market combination
+        within the calendar month.
+
+    freight_value:
+      type: decimal
+      nullable: false
+      source: fact_order_item.freight_value
+      description: >
+        Sum of order-item freight values for the product-market
+        combination within the calendar month.
+
+    avg_order_value:
+      type: decimal
+      nullable: false
+      source: derived
+      description: >
+        Revenue divided by distinct order count.
+
+    revenue_per_customer:
+      type: decimal
+      nullable: false
+      source: derived
+      description: >
+        Revenue divided by distinct customer count.
+
+    market_contribution_to_product_revenue_pct:
+      type: decimal
+      nullable: false
+      source: derived
+      description: >
+        Percentage of total product-month revenue contributed by
+        the customer ZIP-prefix market.

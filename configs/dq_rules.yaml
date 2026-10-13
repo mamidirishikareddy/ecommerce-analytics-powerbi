@@ -1,0 +1,245 @@
+rules:
+- rule_id: RI-001
+  domain: referential_integrity
+  name: order_items_order_reference
+  severity: critical
+  description: Every order item must reference an existing order.
+- rule_id: RI-002
+  domain: referential_integrity
+  name: payments_order_reference
+  severity: critical
+  description: Every payment record must reference an existing order.
+- rule_id: RI-003
+  domain: referential_integrity
+  name: reviews_order_reference
+  severity: critical
+  description: Every review must reference an existing order.
+- rule_id: RI-004
+  domain: referential_integrity
+  name: order_items_product_reference
+  severity: critical
+  description: Every order item must reference an existing product.
+- rule_id: RI-005
+  domain: referential_integrity
+  name: order_items_seller_reference
+  severity: critical
+  description: Every order item must reference an existing seller.
+- rule_id: RI-006
+  domain: referential_integrity
+  name: customer_order_reference
+  severity: critical
+  description: Every customer referenced by an order must exist in the customer reference
+    dataset.
+- rule_id: GRAIN-001
+  domain: grain
+  name: orders_unique_order_id
+  severity: critical
+  description: Order records must be unique at order_id grain.
+- rule_id: GRAIN-002
+  domain: grain
+  name: order_items_unique_order_item
+  severity: critical
+  description: Order item records must be unique at the composite order_id and order_item_id grain.
+
+- rule_id: GRAIN-003
+  domain: grain
+  name: payments_unique_order_payment_sequence
+  severity: critical
+  description: Payment records must be unique at the composite order_id and payment_sequential grain.
+
+- rule_id: GRAIN-004
+  domain: grain
+  name: reviews_unique_review_order
+  severity: critical
+  description: Review records must be unique at the composite review_id and order_id grain.
+- rule_id: GRAIN-005
+  domain: grain
+  name: products_unique_product_id
+  severity: critical
+  description: Product records must be unique at product_id grain.
+
+- rule_id: GRAIN-006
+  domain: grain
+  name: sellers_unique_seller_id
+  severity: critical
+  description: Seller records must be unique at seller_id grain.
+
+- rule_id: GRAIN-007
+  domain: grain
+  name: customers_unique_customer_id
+  severity: critical
+  description: Customer records must be unique at customer_id grain.
+- rule_id: COMP-001
+  domain: completeness
+  name: order_purchase_timestamp_not_null
+  severity: critical
+  description: Order purchase timestamp must be populated.
+
+- rule_id: COMP-002
+  domain: completeness
+  name: order_estimated_delivery_date_not_null
+  severity: critical
+  description: Estimated delivery date for an order must be populated.
+
+- rule_id: COMP-003
+  domain: completeness
+  name: review_score_not_null
+  severity: critical
+  description: Review score must be populated.
+
+- rule_id: COMP-004
+  domain: completeness
+  name: payment_value_not_null
+  severity: critical
+  description: Payment value must be populated.
+
+- rule_id: COMP-005
+  domain: completeness
+  name: order_item_price_not_null
+  severity: critical
+  description: Order item price must be populated.
+
+- rule_id: COMP-006
+  domain: completeness
+  name: order_item_freight_value_not_null
+  severity: critical
+  description: Order item freight value must be populated.
+
+- rule_id: COMP-007
+  domain: completeness
+  name: review_id_not_null
+  severity: critical
+  description: Review id must be populated.
+- rule_id: COMP-008
+  domain: completeness
+  name: review_order_id_not_null
+  severity: critical
+  description: Review order_id must be populated.
+- rule_id: VAL-001
+  domain: validity
+  name: review_score_range
+  severity: critical
+  description: Review score must be between 1 and 5.
+- rule_id: VAL-002
+  domain: validity
+  name: order_item_price_non_negative
+  severity: critical
+  description: Order item price must be non-negative.
+- rule_id: VAL-003
+  domain: validity
+  name: order_item_freight_non_negative
+  severity: critical
+  description: Order item freight value must be non-negative.
+- rule_id: VAL-004
+  domain: validity
+  name: payment_value_non_negative
+  severity: critical
+  description: Payment value must be non-negative.
+- rule_id: VAL-005
+  domain: validity
+  name: payment_installments_non_negative
+  severity: critical
+  description: Payment installments must be non-negative.
+- rule_id: TIME-001
+  domain: temporal_integrity
+  name: purchase_before_approval
+  severity: warning
+  description: Order purchase timestamp should not occur after approval timestamp.
+- rule_id: TIME-002
+  domain: temporal_integrity
+  name: approval_before_carrier_delivery
+  severity: warning
+  description: Order approval timestamp should not occur after carrier delivery timestamp.
+- rule_id: TIME-003
+  domain: temporal_integrity
+  name: carrier_before_customer_delivery
+  severity: warning
+  description: Carrier delivery timestamp should not occur after customer delivery
+    timestamp.
+
+- rule_id: TIME-004
+  domain: temporal_integrity
+  name: purchase_before_estimated_delivery_date
+  severity: warning
+  description: Estimated delivery date should not occur before the purchase timestamp.
+
+
+- rule_id: TIME-005
+  domain: temporal_integrity
+  name: review_creation_before_answer
+  severity: warning
+  description: Review answer timestamp should not occur before review creation date.
+
+- rule_id: TIME-006
+  domain: temporal_integrity
+  name: purchase_before_shipping_limit
+  severity: warning
+  description: Shipping limit date should not occur before order purchase timestamp.
+
+- rule_id: REC-001
+  domain: reconciliation
+  name: order_financial_value_reconciliation
+  severity: warning
+  description: Aggregated item price plus freight should reconcile with aggregated recorded payment value within the configured tolerance.
+- rule_id: GEO-001
+  domain: reference_integrity
+  name: customer_geolocation_zip_prefix_reference
+  severity: warning
+  description: Populated customer ZIP prefixes should exist in the geolocation ZIP prefix reference.
+- rule_id: GEO-002
+  domain: reference_integrity
+  name: seller_geolocation_mapping
+  severity: warning
+  description: Seller ZIP prefix should map to the geolocation reference.
+- rule_id: REF-001
+  domain: reference_integrity
+  name: product_category_translation
+  severity: warning
+  description: Populated product categories should map to the translation reference.
+- rule_id: SIG-001
+  domain: customer_signals
+  name: zero_transition_behavior_direction
+  severity: critical
+  description: Customers with zero consecutive-month transitions must have INSUFFICIENT_EVIDENCE
+    behavior direction.
+- rule_id: SIG-002
+  domain: customer_signals
+  name: zero_transition_evidence_level
+  severity: critical
+  description: Customers with zero consecutive-month transitions must have NONE evidence
+    level.
+- rule_id: SIG-003
+  domain: customer_signals
+  name: zero_transition_signal_confidence
+  severity: critical
+  description: Customers with zero consecutive-month transitions must have NONE signal
+    confidence.
+- rule_id: SIG-004
+  domain: customer_signals
+  name: customer_lifecycle_domain
+  severity: critical
+  description: Customer lifecycle values must belong to the governed lifecycle domain.
+- rule_id: SIG-005
+  domain: customer_signals
+  name: customer_value_segment_domain
+  severity: critical
+  description: Customer value segment values must belong to the governed value-segment
+    domain.
+- rule_id: SIG-006
+  domain: customer_signals
+  name: customer_behavior_direction_domain
+  severity: critical
+  description: Customer behavior direction values must belong to the governed behavior-direction
+    domain.
+- rule_id: SIG-007
+  domain: customer_signals
+  name: customer_evidence_level_domain
+  severity: critical
+  description: Customer evidence levels must belong to the governed evidence-level
+    domain.
+- rule_id: SIG-008
+  domain: customer_signals
+  name: customer_signal_confidence_domain
+  severity: critical
+  description: Customer signal confidence values must belong to the governed confidence
+    domain.

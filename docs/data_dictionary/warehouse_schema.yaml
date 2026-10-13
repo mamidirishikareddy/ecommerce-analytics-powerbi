@@ -1,0 +1,421 @@
+version: "1.0"
+
+warehouse_schema:
+
+  facts:
+
+    fact_order:
+      grain: one row per order
+      business_key:
+        - order_id
+      source_staging: stg_orders
+      columns:
+        order_id:
+          dtype: string
+          nullable: false
+          role: business_key
+          source_column: order_id
+
+        customer_id:
+          dtype: string
+          nullable: false
+          role: foreign_key
+          references: dim_customer.customer_id
+          source_column: customer_id
+
+        order_status:
+          dtype: string
+          nullable: false
+          role: attribute
+          source_column: order_status
+
+        order_purchase_timestamp:
+          dtype: datetime
+          nullable: false
+          role: event_timestamp
+          source_column: order_purchase_timestamp
+
+        order_approved_at:
+          dtype: datetime
+          nullable: true
+          role: event_timestamp
+          source_column: order_approved_at
+
+        order_delivered_carrier_date:
+          dtype: datetime
+          nullable: true
+          role: event_timestamp
+          source_column: order_delivered_carrier_date
+
+        order_delivered_customer_date:
+          dtype: datetime
+          nullable: true
+          role: event_timestamp
+          source_column: order_delivered_customer_date
+
+        order_estimated_delivery_date:
+          dtype: datetime
+          nullable: false
+          role: event_timestamp
+          source_column: order_estimated_delivery_date
+
+    fact_order_item:
+      grain: one row per order item line
+      business_key:
+        - order_id
+        - order_item_id
+      source_staging: stg_order_items
+      columns:
+        order_id:
+          dtype: string
+          nullable: false
+          role: foreign_key
+          references: fact_order.order_id
+          source_column: order_id
+
+        order_item_id:
+          dtype: integer
+          nullable: false
+          role: business_key
+          source_column: order_item_id
+
+        product_id:
+          dtype: string
+          nullable: false
+          role: foreign_key
+          references: dim_product.product_id
+          source_column: product_id
+
+        seller_id:
+          dtype: string
+          nullable: false
+          role: foreign_key
+          references: dim_seller.seller_id
+          source_column: seller_id
+
+        shipping_limit_date:
+          dtype: datetime
+          nullable: false
+          role: event_timestamp
+          source_column: shipping_limit_date
+
+        price:
+          dtype: decimal
+          nullable: false
+          role: measure
+          source_column: price
+
+        freight_value:
+          dtype: decimal
+          nullable: false
+          role: measure
+          source_column: freight_value
+
+    fact_payment:
+      grain: one row per payment sequence within an order
+      business_key:
+        - order_id
+        - payment_sequential
+      source_staging: stg_payments
+      columns:
+        order_id:
+          dtype: string
+          nullable: false
+          role: foreign_key
+          references: fact_order.order_id
+          source_column: order_id
+
+        payment_sequential:
+          dtype: integer
+          nullable: false
+          role: business_key
+          source_column: payment_sequential
+
+        payment_type:
+          dtype: string
+          nullable: false
+          role: attribute
+          source_column: payment_type
+
+        payment_installments:
+          dtype: integer
+          nullable: false
+          role: measure
+          source_column: payment_installments
+
+        payment_value:
+          dtype: decimal
+          nullable: false
+          role: measure
+          source_column: payment_value
+
+    fact_review:
+      grain: one row per review record associated with an order
+      business_key:
+        - review_id
+        - order_id
+      source_staging: stg_reviews
+      columns:
+        review_id:
+          dtype: string
+          nullable: false
+          role: business_key
+          source_column: review_id
+
+        order_id:
+          dtype: string
+          nullable: false
+          role: foreign_key
+          references: fact_order.order_id
+          source_column: order_id
+
+        review_score:
+          dtype: integer
+          nullable: false
+          role: measure
+          source_column: review_score
+
+        review_comment_title:
+          dtype: string
+          nullable: true
+          role: attribute
+          source_column: review_comment_title
+
+        review_comment_message:
+          dtype: string
+          nullable: true
+          role: attribute
+          source_column: review_comment_message
+
+        review_creation_date:
+          dtype: datetime
+          nullable: false
+          role: event_timestamp
+          source_column: review_creation_date
+
+        review_answer_timestamp:
+          dtype: datetime
+          nullable: false
+          role: event_timestamp
+          source_column: review_answer_timestamp
+
+  dimensions:
+
+    dim_date:
+      grain: one row per calendar date
+      source_staging: []
+      columns:
+        date:
+          dtype: date
+          nullable: false
+          role: business_key
+
+        year:
+          dtype: integer
+          nullable: false
+          role: attribute
+
+        quarter:
+          dtype: integer
+          nullable: false
+          role: attribute
+
+        month:
+          dtype: integer
+          nullable: false
+          role: attribute
+
+        month_name:
+          dtype: string
+          nullable: false
+          role: attribute
+
+        day:
+          dtype: integer
+          nullable: false
+          role: attribute
+
+        day_of_week:
+          dtype: integer
+          nullable: false
+          role: attribute
+
+        day_name:
+          dtype: string
+          nullable: false
+          role: attribute
+
+        week_of_year:
+          dtype: integer
+          nullable: false
+          role: attribute
+
+    dim_customer:
+      grain: one row per customer-order identifier
+      source_staging: stg_customers
+      columns:
+        customer_id:
+          dtype: string
+          nullable: false
+          role: business_key
+          source_column: customer_id
+
+        customer_unique_id:
+          dtype: string
+          nullable: false
+          role: identity_attribute
+          source_column: customer_unique_id
+
+        customer_zip_code_prefix:
+          dtype: integer
+          nullable: false
+          role: geography_key
+          source_column: customer_zip_code_prefix
+
+        customer_city:
+          dtype: string
+          nullable: false
+          role: attribute
+          source_column: customer_city
+
+        customer_state:
+          dtype: string
+          nullable: false
+          role: attribute
+          source_column: customer_state
+
+    dim_product:
+      grain: one row per product
+      source_staging: stg_products
+      columns:
+        product_id:
+          dtype: string
+          nullable: false
+          role: business_key
+          source_column: product_id
+
+        product_category_name:
+          dtype: string
+          nullable: true
+          role: category_key
+          source_column: product_category_name
+
+        product_name_length:
+          dtype: integer
+          nullable: true
+          role: attribute
+          source_column: product_name_length
+
+        product_description_length:
+          dtype: integer
+          nullable: true
+          role: attribute
+          source_column: product_description_length
+
+        product_photos_qty:
+          dtype: integer
+          nullable: true
+          role: attribute
+          source_column: product_photos_qty
+
+        product_weight_g:
+          dtype: decimal
+          nullable: true
+          role: attribute
+          source_column: product_weight_g
+
+        product_length_cm:
+          dtype: decimal
+          nullable: true
+          role: attribute
+          source_column: product_length_cm
+
+        product_height_cm:
+          dtype: decimal
+          nullable: true
+          role: attribute
+          source_column: product_height_cm
+
+        product_width_cm:
+          dtype: decimal
+          nullable: true
+          role: attribute
+          source_column: product_width_cm
+
+    dim_seller:
+      grain: one row per seller
+      source_staging: stg_sellers
+      columns:
+        seller_id:
+          dtype: string
+          nullable: false
+          role: business_key
+          source_column: seller_id
+
+        seller_zip_code_prefix:
+          dtype: integer
+          nullable: false
+          role: geography_key
+          source_column: seller_zip_code_prefix
+
+        seller_city:
+          dtype: string
+          nullable: false
+          role: attribute
+          source_column: seller_city
+
+        seller_state:
+          dtype: string
+          nullable: false
+          role: attribute
+          source_column: seller_state
+
+    dim_category:
+      grain: one row per translated product category
+      source_staging: stg_category_translation
+      columns:
+        product_category_name:
+          dtype: string
+          nullable: false
+          role: business_key
+          source_column: product_category_name
+
+        product_category_name_english:
+          dtype: string
+          nullable: false
+          role: attribute
+          source_column: product_category_name_english
+
+    dim_geography:
+      grain: one row per geolocation observation
+      source_staging: stg_geolocation
+      columns:
+        geolocation_zip_code_prefix:
+          dtype: integer
+          nullable: false
+          role: reference_attribute
+          source_column: geolocation_zip_code_prefix
+
+        geolocation_lat:
+          dtype: decimal
+          nullable: false
+          role: attribute
+          source_column: geolocation_lat
+
+        geolocation_lng:
+          dtype: decimal
+          nullable: false
+          role: attribute
+          source_column: geolocation_lng
+
+        geolocation_city:
+          dtype: string
+          nullable: false
+          role: attribute
+          source_column: geolocation_city
+
+        geolocation_state:
+          dtype: string
+          nullable: false
+          role: attribute
+          source_column: geolocation_state

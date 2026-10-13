@@ -1,0 +1,126 @@
+analytics:
+  name: revenue_decomposition
+  version: "1.0"
+
+  purpose: >
+    Governed analytical decomposition of monthly revenue performance
+    into order volume, average order value, customer contribution,
+    product/category mix, and market contribution without introducing
+    presentation-specific logic or unsupported causal claims.
+
+  grain: >
+    One analytical result per calendar month for the overall revenue
+    decomposition.
+
+  business_key:
+    - month
+
+  source_marts:
+    - mart_product_performance_daily
+    - mart_customer_performance_monthly
+    - mart_market_performance_monthly
+    - mart_product_market_performance_monthly
+
+  core_metrics:
+    revenue:
+      source: mart_product_performance_daily.revenue
+      aggregation: sum
+      description: >
+        Total order-item revenue represented in the governed product
+        performance mart.
+
+    freight_value:
+      source: mart_product_performance_daily.freight_value
+      aggregation: sum
+      description: >
+        Total order-item freight value represented in the governed
+        product performance mart.
+
+    order_count:
+      source: mart_product_performance_daily.order_count
+      aggregation: sum
+      description: >
+        Monthly order count. Must be interpreted from a source mart
+        whose grain does not duplicate orders across product rows;
+        therefore this metric must not be sourced by summing the
+        product mart directly.
+
+    customer_count:
+      source: mart_customer_performance_monthly.customer_unique_id
+      aggregation: distinct_count
+      description: >
+        Distinct customers contributing to monthly purchasing activity.
+
+    avg_order_value:
+      source: derived
+      formula: revenue / order_count
+      description: >
+        Revenue divided by distinct monthly orders.
+
+    revenue_per_customer:
+      source: derived
+      formula: revenue / customer_count
+      description: >
+        Revenue divided by distinct monthly customers.
+
+  decomposition:
+    order_volume_effect:
+      description: >
+        Change in revenue attributable to change in order volume while
+        holding the comparison-period average order value constant.
+
+    average_order_value_effect:
+      description: >
+        Change in revenue attributable to change in average order value
+        while holding the comparison-period order volume constant.
+
+    customer_effect:
+      description: >
+        Diagnostic view of changes in customer contribution using
+        monthly customer-level purchasing data. This is descriptive
+        and must not be interpreted as an independent causal effect.
+
+    product_mix:
+      source: mart_product_performance_daily
+      description: >
+        Product and category contribution to monthly revenue and revenue
+        change.
+
+    market_mix:
+      source: mart_market_performance_monthly
+      description: >
+        Customer ZIP-prefix market contribution to monthly revenue and
+        revenue change.
+
+    product_market_mix:
+      source: mart_product_market_performance_monthly
+      description: >
+        Product performance within customer ZIP-prefix markets, including
+        each market's contribution to product-month revenue.
+
+  required_reconciliations:
+    - >
+      Monthly revenue must reconcile to the governed warehouse
+      fact_order_item revenue.
+    - >
+      Monthly freight value must reconcile to the governed warehouse
+      fact_order_item freight value.
+    - >
+      Monthly customer count must be calculated using distinct
+      customer_unique_id.
+    - >
+      Product and market diagnostic views must not be summed together
+      to produce overall monthly order or customer counts.
+    - >
+      Revenue decomposition components must reconcile to the observed
+      monthly revenue change within the declared decomposition method.
+
+  exclusions:
+    - Unsupported causal attribution
+    - Forecasting
+    - Anomaly scoring
+    - AI-generated metrics
+    - Presentation-specific DAX
+    - Customer segmentation not defined by an approved contract
+    - City or state inference
+    - Silent data correction

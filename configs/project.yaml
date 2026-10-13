@@ -1,0 +1,19 @@
+﻿project:
+  name: PRODUCT-PULSE-AI
+  version: 0.1.0
+
+paths:
+  raw: data/raw
+  staging: data/staging
+  processed: data/processed
+  quarantine: data/quarantine
+  reference: data/reference
+  outputs: outputs
+  logs: logs
+
+data:
+  source: Olist Brazilian E-Commerce Public Dataset
+  expected_files: 9
+
+quality:
+  fail_on_critical_errors: true

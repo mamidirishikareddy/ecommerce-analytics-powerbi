@@ -1,0 +1,269 @@
+version: '1.0'
+datasets:
+  orders:
+    file: olist_orders_dataset.csv
+  order_items:
+    file: olist_order_items_dataset.csv
+  payments:
+    file: olist_order_payments_dataset.csv
+  reviews:
+    file: olist_order_reviews_dataset.csv
+  products:
+    file: olist_products_dataset.csv
+  customers:
+    file: olist_customers_dataset.csv
+  sellers:
+    file: olist_sellers_dataset.csv
+  geolocation:
+    file: olist_geolocation_dataset.csv
+  category_translation:
+    file: product_category_name_translation.csv
+  customer_signals:
+    file: ../data/processed/marts/mart_customer_signals.parquet
+rules:
+  RI-001:
+    evaluator: reference_integrity
+    child_dataset: order_items
+    child_column: order_id
+    parent_dataset: orders
+    parent_column: order_id
+  RI-002:
+    evaluator: reference_integrity
+    child_dataset: payments
+    child_column: order_id
+    parent_dataset: orders
+    parent_column: order_id
+  RI-003:
+    evaluator: reference_integrity
+    child_dataset: reviews
+    child_column: order_id
+    parent_dataset: orders
+    parent_column: order_id
+  RI-004:
+    evaluator: reference_integrity
+    child_dataset: order_items
+    child_column: product_id
+    parent_dataset: products
+    parent_column: product_id
+  RI-005:
+    evaluator: reference_integrity
+    child_dataset: order_items
+    child_column: seller_id
+    parent_dataset: sellers
+    parent_column: seller_id
+  RI-006:
+    evaluator: reference_integrity
+    child_dataset: orders
+    child_column: customer_id
+    parent_dataset: customers
+    parent_column: customer_id
+  GRAIN-001:
+    evaluator: unique
+    dataset: orders
+    column: order_id
+  GRAIN-002:
+    evaluator: unique
+    dataset: order_items
+    columns:
+      - order_id
+      - order_item_id
+  GRAIN-003:
+    evaluator: unique
+    dataset: payments
+    columns:
+      - order_id
+      - payment_sequential
+  GRAIN-004:
+    evaluator: unique
+    dataset: reviews
+    columns:
+      - review_id
+      - order_id
+  GRAIN-005:
+    evaluator: unique
+    dataset: products
+    column: product_id
+  GRAIN-006:
+    evaluator: unique
+    dataset: sellers
+    column: seller_id
+  GRAIN-007:
+    evaluator: unique
+    dataset: customers
+    column: customer_id
+  COMP-001:
+    evaluator: not_null
+    dataset: orders
+    column: order_purchase_timestamp
+  COMP-002:
+    evaluator: not_null
+    dataset: orders
+    column: order_estimated_delivery_date
+  COMP-003:
+    evaluator: not_null
+    dataset: reviews
+    column: review_score
+  COMP-004:
+    evaluator: not_null
+    dataset: payments
+    column: payment_value
+  COMP-005:
+    evaluator: not_null
+    dataset: order_items
+    column: price
+  COMP-006:
+    evaluator: not_null
+    dataset: order_items
+    column: freight_value
+  COMP-007:
+    evaluator: not_null
+    dataset: reviews
+    column: review_id
+  COMP-008:
+    evaluator: not_null
+    dataset: reviews
+    column: order_id
+  VAL-001:
+    evaluator: range
+    dataset: reviews
+    column: review_score
+    min_value: 1
+    max_value: 5
+  VAL-002:
+    evaluator: minimum
+    dataset: order_items
+    column: price
+    minimum: 0
+  VAL-003:
+    evaluator: minimum
+    dataset: order_items
+    column: freight_value
+    minimum: 0
+  VAL-004:
+    evaluator: minimum
+    dataset: payments
+    column: payment_value
+    minimum: 0
+  VAL-005:
+    evaluator: range
+    dataset: payments
+    column: payment_installments
+    min_value: 0
+  TIME-001:
+    evaluator: temporal_order
+    dataset: orders
+    start_column: order_purchase_timestamp
+    end_column: order_approved_at
+  TIME-002:
+    evaluator: temporal_order
+    dataset: orders
+    start_column: order_approved_at
+    end_column: order_delivered_carrier_date
+  TIME-003:
+    evaluator: temporal_order
+    dataset: orders
+    start_column: order_delivered_carrier_date
+    end_column: order_delivered_customer_date
+  TIME-004:
+    evaluator: temporal_order
+    dataset: orders
+    earlier_column: order_purchase_timestamp
+    later_column: order_estimated_delivery_date
+  TIME-005:
+    evaluator: temporal_order
+    dataset: reviews
+    earlier_column: review_creation_date
+    later_column: review_answer_timestamp
+  TIME-006:
+    evaluator: temporal_order
+    dataset: order_item_temporal
+    earlier_column: order_purchase_timestamp
+    later_column: shipping_limit_date
+  REC-001:
+    evaluator: reconciliation
+    dataset: order_reconciliation
+    expected_column: expected_value
+    actual_column: payment_value
+    tolerance: 0.01
+  GEO-001:
+    evaluator: reference_integrity
+    child_dataset: customers
+    child_column: customer_zip_code_prefix
+    parent_dataset: geolocation
+    parent_column: geolocation_zip_code_prefix
+  GEO-002:
+    evaluator: reference_integrity
+    child_dataset: sellers
+    child_column: seller_zip_code_prefix
+    parent_dataset: geolocation
+    parent_column: geolocation_zip_code_prefix
+  REF-001:
+    evaluator: reference_integrity
+    child_dataset: products
+    child_column: product_category_name
+    parent_dataset: category_translation
+    parent_column: product_category_name
+  SIG-001:
+    evaluator: conditional_value
+    dataset: customer_signals
+    condition_column: transition_count
+    condition_value: 0
+    target_column: behavior_direction
+    expected_value: INSUFFICIENT_EVIDENCE
+  SIG-002:
+    evaluator: conditional_value
+    dataset: customer_signals
+    condition_column: transition_count
+    condition_value: 0
+    target_column: evidence_level
+    expected_value: NONE
+  SIG-003:
+    evaluator: conditional_value
+    dataset: customer_signals
+    condition_column: transition_count
+    condition_value: 0
+    target_column: signal_confidence
+    expected_value: NONE
+  SIG-004:
+    evaluator: allowed_values
+    dataset: customer_signals
+    column: customer_lifecycle
+    allowed_values:
+    - ONE_TIME
+    - REPEAT_ACTIVE
+    - DORMANT
+  SIG-005:
+    evaluator: allowed_values
+    dataset: customer_signals
+    column: value_segment
+    allowed_values:
+    - LOW_VALUE
+    - MID_VALUE
+    - HIGH_VALUE
+  SIG-006:
+    evaluator: allowed_values
+    dataset: customer_signals
+    column: behavior_direction
+    allowed_values:
+    - INCREASING
+    - DECREASING
+    - STABLE
+    - INSUFFICIENT_EVIDENCE
+  SIG-007:
+    evaluator: allowed_values
+    dataset: customer_signals
+    column: evidence_level
+    allowed_values:
+    - NONE
+    - LOW
+    - MEDIUM
+    - HIGH
+  SIG-008:
+    evaluator: allowed_values
+    dataset: customer_signals
+    column: signal_confidence
+    allowed_values:
+    - NONE
+    - LOW
+    - MEDIUM
+    - HIGH

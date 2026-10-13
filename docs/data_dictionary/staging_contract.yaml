@@ -1,0 +1,97 @@
+version: "1.0"
+
+staging_contract:
+
+  purpose:
+    - Preserve source business meaning.
+    - Preserve source grain.
+    - Preserve source keys.
+    - Apply only deterministic structural normalization.
+    - Do not calculate business KPIs.
+    - Do not create dimensional surrogate keys.
+    - Do not silently repair source anomalies.
+
+  allowed_transformations:
+    - Column name normalization where explicitly defined.
+    - Data type normalization.
+    - Timestamp parsing to a consistent datetime representation.
+    - Whitespace normalization for string fields where safe.
+    - Explicit source-to-staging column mapping.
+    - Preservation of original source identifiers.
+
+  prohibited_transformations:
+    - Business KPI calculations.
+    - Revenue aggregation.
+    - Customer segmentation.
+    - Deduplication without a governed rule.
+    - Imputation of business values.
+    - Silent correction of invalid source values.
+    - Surrogate-key generation.
+    - Fact/dimension construction.
+
+  datasets:
+
+    orders:
+      source_file: olist_orders_dataset.csv
+      staging_name: stg_orders
+      grain: one row per order
+      natural_key:
+        - order_id
+
+    order_items:
+      source_file: olist_order_items_dataset.csv
+      staging_name: stg_order_items
+      grain: one row per order item line
+      natural_key:
+        - order_id
+        - order_item_id
+
+    payments:
+      source_file: olist_order_payments_dataset.csv
+      staging_name: stg_payments
+      grain: one row per payment sequence within an order
+      natural_key:
+        - order_id
+        - payment_sequential
+
+    reviews:
+      source_file: olist_order_reviews_dataset.csv
+      staging_name: stg_reviews
+      grain: one row per review record associated with an order
+      natural_key:
+        - review_id
+        - order_id
+
+    customers:
+      source_file: olist_customers_dataset.csv
+      staging_name: stg_customers
+      grain: one row per customer-order identifier
+      natural_key:
+        - customer_id
+
+    products:
+      source_file: olist_products_dataset.csv
+      staging_name: stg_products
+      grain: one row per product
+      natural_key:
+        - product_id
+
+    sellers:
+      source_file: olist_sellers_dataset.csv
+      staging_name: stg_sellers
+      grain: one row per seller
+      natural_key:
+        - seller_id
+
+    geolocation:
+      source_file: olist_geolocation_dataset.csv
+      staging_name: stg_geolocation
+      grain: one row per geolocation observation
+      natural_key: []
+
+    category_translation:
+      source_file: product_category_name_translation.csv
+      staging_name: stg_category_translation
+      grain: one row per category translation
+      natural_key:
+        - product_category_name

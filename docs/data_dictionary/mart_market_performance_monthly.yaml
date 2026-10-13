@@ -1,0 +1,166 @@
+version: "1.0"
+
+mart:
+  name: mart_market_performance_monthly
+
+  purpose: >
+    Monthly customer ZIP-prefix market performance mart supporting
+    geographic demand, revenue, customer, and order analysis.
+
+  grain: one row per calendar month and customer ZIP-code prefix
+
+  business_key:
+    - month
+    - customer_zip_code_prefix
+
+  source_tables:
+    - fact_order
+    - fact_order_item
+    - dim_customer
+    - dim_date
+
+  join_rules:
+    - >
+      fact_order.customer_id joins dim_customer.customer_id
+      using a many-to-one relationship.
+    - >
+      fact_order_item.order_id joins fact_order.order_id
+      using a many-to-one relationship.
+    - >
+      month is derived from fact_order.order_purchase_timestamp.
+    - >
+      dim_date is loaded and validated by the implementation;
+      it is not used as a join in the current transformation.
+
+  transformations:
+    - >
+      month is derived by converting
+      fact_order.order_purchase_timestamp to calendar month,
+      represented by the first day of that month.
+    - >
+      customer_zip_code_prefix is sourced from dim_customer.
+    - >
+      order_count is DISTINCT COUNT of order_id
+      within each month and ZIP-prefix market.
+    - >
+      item_line_count is COUNT of fact_order_item rows.
+    - >
+      customer_count is DISTINCT COUNT of customer_unique_id.
+    - >
+      revenue is SUM of fact_order_item.price.
+    - >
+      freight_value is SUM of fact_order_item.freight_value.
+    - >
+      avg_order_value is revenue divided by order_count.
+    - >
+      revenue_per_customer is revenue divided by customer_count.
+    - >
+      avg_freight_per_order is freight_value divided by order_count.
+
+  columns:
+
+    month:
+      dtype: date
+      nullable: false
+      role: business_key
+      source: derived from fact_order.order_purchase_timestamp
+
+    customer_zip_code_prefix:
+      dtype: integer
+      nullable: false
+      role: business_key
+      source: dim_customer.customer_zip_code_prefix
+
+    order_count:
+      dtype: integer
+      nullable: false
+      role: analytical_measure
+      source: fact_order.order_id
+      aggregation: distinct_count
+
+    item_line_count:
+      dtype: integer
+      nullable: false
+      role: analytical_measure
+      source: fact_order_item.order_id
+      aggregation: count_rows
+
+    customer_count:
+      dtype: integer
+      nullable: false
+      role: analytical_measure
+      source: dim_customer.customer_unique_id
+      aggregation: distinct_count
+
+    revenue:
+      dtype: decimal
+      nullable: false
+      role: analytical_measure
+      source: fact_order_item.price
+      aggregation: sum
+
+    freight_value:
+      dtype: decimal
+      nullable: false
+      role: analytical_measure
+      source: fact_order_item.freight_value
+      aggregation: sum
+
+    avg_order_value:
+      dtype: decimal
+      nullable: false
+      role: derived_measure
+      formula: revenue / order_count
+
+    revenue_per_customer:
+      dtype: decimal
+      nullable: false
+      role: derived_measure
+      formula: revenue / customer_count
+
+    avg_freight_per_order:
+      dtype: decimal
+      nullable: false
+      role: derived_measure
+      formula: freight_value / order_count
+
+  quality_rules:
+    - >
+      The combination of month and customer_zip_code_prefix
+      must be unique.
+    - >
+      month and customer_zip_code_prefix must not contain nulls.
+    - >
+      order_count, item_line_count, and customer_count
+      must be greater than zero.
+    - >
+      revenue and freight_value must be nonnegative.
+    - >
+      avg_order_value must equal revenue divided by order_count.
+    - >
+      revenue_per_customer must equal revenue divided
+      by customer_count.
+    - >
+      avg_freight_per_order must equal freight_value
+      divided by order_count.
+    - >
+      The customer and order-item joins must preserve
+      their respective source populations.
+
+  exclusions:
+    - >
+      Do not join fact_payment or fact_review into this mart,
+      as their separate grains may introduce measure fan-out.
+    - >
+      Do not interpret ZIP-code prefixes as exact geographic
+      boundaries or infer city-level performance from them.
+    - >
+      Do not create units-sold metrics because the source
+      dataset contains no explicit quantity field.
+    - >
+      Do not silently deduplicate, impute, or repair source records.
+    - >
+      Do not calculate growth rates, contribution percentages,
+      rankings, forecasts, or anomaly signals in this mart.
+    - >
+      Do not infer causal explanations for market performance.
